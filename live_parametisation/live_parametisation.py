@@ -1,13 +1,32 @@
 import sys
+import subprocess
+import importlib.util
+
+def ensure_pyqt6():
+    if importlib.util.find_spec("PyQt6") is None:
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "PyQt6"])
+            importlib.invalidate_caches()
+        except Exception:
+            pass
+
+ensure_pyqt6()
+
 import threading
 import rclpy
 from rclpy.node import Node
 from rcl_interfaces.srv import SetParameters
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
-                             QLabel, QDoubleSpinBox, QGroupBox, QPushButton, QFrame)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+
+try:
+    from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
+                                 QLabel, QDoubleSpinBox, QGroupBox, QPushButton)
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtGui import QFont
+except ImportError:
+    print("\n[!] PyQt6 installation failed or a restart is required.")
+    print("[!] Please run: pip3 install PyQt6\n")
+    sys.exit(1)
 
 STYLESHEET = """
     QWidget {
@@ -85,7 +104,7 @@ class RemoteControlNode(Node):
             request.parameters.append(param)
 
         client.call_async(request)
-        self.get_logger().info(f'Params sent to: {node_type}')
+        self.get_logger().info(f'Params successfully sent to: {node_type}')
 
 class ControlGui(QWidget):
     def __init__(self, node):
@@ -109,8 +128,8 @@ class ControlGui(QWidget):
 
         ftg_group = QGroupBox("FOLLOW THE GAP")
         ftg_layout = QVBoxLayout()
-        self.ftg_radius = self.create_input_row("Safety Radius", 2.0, ftg_layout)
-        self.ftg_sens = self.create_input_row("Steering Sensitivity", 0.7, ftg_layout)
+        self.ftg_radius = self.create_input_row("Safety Radius", 2.0, ftg_layout) # float
+        self.ftg_sens = self.create_input_row("Steering Sensitivity", 0.7, ftg_layout) # float
         btn_ftg = QPushButton("APPLY FTG CONFIG")
         btn_ftg.clicked.connect(self.apply_ftg)
         ftg_layout.addWidget(btn_ftg)
@@ -119,8 +138,8 @@ class ControlGui(QWidget):
 
         sp_group = QGroupBox("SIMPLE PURSUIT")
         sp_layout = QVBoxLayout()
-        self.sp_vel = self.create_input_row("Velocity", 1.0, sp_layout)
-        self.sp_range = self.create_input_row("Angle Range", 360, sp_layout, is_int=True)
+        self.sp_vel = self.create_input_row("Velocity", 1.0, sp_layout) # float
+        self.sp_range = self.create_input_row("Angle Range", 360, sp_layout, is_int=True) # int
         btn_sp = QPushButton("APPLY PURSUIT CONFIG")
         btn_sp.clicked.connect(self.apply_sp)
         sp_layout.addWidget(btn_sp)
@@ -139,10 +158,10 @@ class ControlGui(QWidget):
         
         if is_int:
             spin.setDecimals(0)
-            spin.setRange(0, 360)
+            spin.setRange(0, 360) # int
         else:
-            spin.setRange(0.0, 10.0)
-            spin.setSingleStep(0.1)
+            spin.setRange(0.0, 10.0) # float
+            spin.setSingleStep(0.1) # float
             
         spin.setValue(float(default))
         

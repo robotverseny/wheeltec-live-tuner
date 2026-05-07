@@ -12,6 +12,8 @@ This package provides a **Real-Time param tune GUI** for the Wheeltec Ackermann 
 
 ---
 
+
+
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
@@ -19,7 +21,8 @@ Ensure you have the following installed on your local machine or the robot:
 *   **ROS 2** (Jazzy or Humble)
 *   **PyQt6**
     ```bash
-    pip install PyQt6
+    sudo apt install python3-pip
+    pip3 install PyQt6 --break-system-packages
     ```
 
 ### 2. Installation
